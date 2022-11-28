@@ -15,8 +15,25 @@ class APIController extends Controller
 
     public function __construct()
     {
+        // Check that the ids we need are set
+        $idsThatShouldBeSet = [
+            'HUBSPOT_API_KEY',
+            'WEBFLOW_API_KEY',
+            'WEBFLOW_POSTS_RESOURCE',
+            'WEBFLOW_TAGS_RESOURCE',
+            'WEBFLOW_AUTHORS_RESOURCE',
+        ];
+
+        foreach ($idsThatShouldBeSet as $id) {
+            if (!getenv($id)) {
+                throw new Exception("Please set the environment variable $id");
+            }
+        }
     }
 
+    /**
+     * Get Webflow items for a particular collection id
+     */
     public function getWebflowCollectionItems($collectionId)
     {
         $cacheName = 'getWebflowCollectionItems-' . $collectionId;
@@ -36,6 +53,9 @@ class APIController extends Controller
         return $return;
     }
 
+    /**
+     * Get all the Hubspot posts
+     */
     public function getHubspotPosts()
     {
         $hubspot = \HubSpot\Factory::createWithAccessToken(env('HUBSPOT_API_KEY'));
@@ -66,7 +86,9 @@ class APIController extends Controller
         return $results;
     }
 
-
+    /**
+     * Run through all the Hubspot tags, authors & posts and add them to Webflow
+     */
     public function addHubspotPosts()
     {
         $this->msg('Get Hubspot Posts');
@@ -152,7 +174,9 @@ class APIController extends Controller
         }
     }
 
-
+    /**
+     * Do some HTML cleanup
+     */
     private function cleanHTML($html)
     {
         $search = ['<header>', '</header>'];
@@ -172,6 +196,7 @@ class APIController extends Controller
         ]);
         return $clean;
     }
+
 
     private function characterLimiter($str, $n = 500, $end_char = '&#8230;')
     {
