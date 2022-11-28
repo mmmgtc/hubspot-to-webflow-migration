@@ -64,5 +64,12 @@ WEBFLOW_AUTHORS_RESOURCE=
 
 ```
 make up
-make in
 ```
+
+## 5. Run the script
+
+```
+make go
+```
+
+This should run through all the blog posts in Hubspot and re-create them in Webflow if they don't already exist.
