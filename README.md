@@ -2,7 +2,13 @@
 
 This script takes existing blog content from Hubspot and syncs it with Webflow. Typical use is if you're migrating your blog content from Hubspot to Webflow.
 
-## 1. Setup a Hubspot Private APP
+## 1. Create a local .env
+
+```
+cp .env.example .env
+```
+
+## 2. Setup a Hubspot Private APP
 
 In Hubspot, create a new Private App with the permissions below, and add the API key to the HUBSPOT_API_KEY environment variable:
 
@@ -26,11 +32,11 @@ crm.schemas.line_items.read
 cms.performance.read
 ```
 
-## 2. Setup a Webflow API key
+## 3. Setup a Webflow API key
 
 Under Settings / Integrations for your Webflow domain, you'll find an API Access section. Generate a new API key, and add it to the WEBFLOW_API_KEY environment variable.
 
-## 3. Setup the collections in Webflow
+## 4. Setup the collections in Webflow
 
 In our particular case, the standard "posts" for blog collection items wasn't enough, and we had to add "authors" and "tags" as additional collection items.
 
@@ -60,13 +66,13 @@ WEBFLOW_POSTS_RESOURCE=
 WEBFLOW_TAGS_RESOURCE=
 WEBFLOW_AUTHORS_RESOURCE=
 
-## 4. Boot up your development environment
+## 5. Boot up your development environment
 
 ```
 make up
 ```
 
-## 5. Run the script
+## 6. Run the script
 
 ```
 make go
