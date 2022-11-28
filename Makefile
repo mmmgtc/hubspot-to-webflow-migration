@@ -4,4 +4,9 @@ up:
 
 .PHONY: in
 in:
-	docker exec -it laravel.test /bin/bash
+	docker exec -it hubspot-to-webflow-migration-laravel.test-1 /bin/bash
+
+.PHONY: go
+go:
+	./vendor/bin/sail artisan go
+
