@@ -8,6 +8,7 @@ use HubSpot\Client\Cms\Blogs\BlogPosts\Model\BlogPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use tidy;
+use Illuminate\Support\Str;
 
 class APIController extends Controller
 {
@@ -36,7 +37,7 @@ class APIController extends Controller
      */
     public function getWebflowCollectionItems($collectionId)
     {
-        $cacheName = 'getWebflowCollectionItems-' . $collectionId;
+        $cacheName = 'getWebflowCollectionItems1-' . $collectionId;
         if (Cache::get($cacheName)) {
             return Cache::get($cacheName);
         }
@@ -86,6 +87,31 @@ class APIController extends Controller
         return $results;
     }
 
+
+    private function syncWebflowAuthors($hubspotAuthors)
+    {
+        $this->msg('Sync Webflow Authors: ');
+        foreach ($hubspotAuthors as $key => $value) {
+            $data = [
+                'name' => $value,
+                'slug' => Str::slug($value),
+            ];
+            $this->webflowAddCollectionItem(env('WEBFLOW_AUTHORS_RESOURCE'), $data);
+        }
+    }
+
+    private function syncWebflowTags($hubspotTags)
+    {
+        $this->msg('Sync Webflow Tags: ');
+        foreach ($hubspotTags as $key => $value) {
+            $data = [
+                'name' => $value,
+                'slug' => Str::slug($value),
+            ];
+            $this->webflowAddCollectionItem(env('WEBFLOW_TAGS_RESOURCE'), $data);
+        }
+    }
+
     /**
      * Run through all the Hubspot tags, authors & posts and add them to Webflow
      */
@@ -97,15 +123,27 @@ class APIController extends Controller
         $this->msg('Hubspot Authors: ' . count($hubspotAuthors));
         $this->msg('Webflow Authors: ' . count($webflowAuthors));
 
+        if (count($hubspotAuthors) != count($webflowAuthors)) {
+            $this->syncWebflowAuthors($hubspotAuthors);
+            $webflowAuthors = $this->getWebflowCollectionItems(env('WEBFLOW_AUTHORS_RESOURCE'));
+            $this->msg('Webflow Authors: ' . count($webflowAuthors));
+        }
+
         $webflowTags = $this->getWebflowCollectionItems(env('WEBFLOW_TAGS_RESOURCE'));
         $hubspotTags = $this->getHubspotTags();
-        $this->msg('Webflow Tags: ' . count($webflowTags));
         $this->msg('Hubspot Tags: ' . count($hubspotTags));
+        $this->msg('Webflow Tags: ' . count($webflowTags));
+
+        if (count($hubspotTags) != count($webflowTags)) {
+            $this->syncWebflowTags($hubspotTags);
+            $webflowTags = $this->getWebflowCollectionItems(env('WEBFLOW_TAGS_RESOURCE'));
+            $this->msg('Webflow Tags: ' . count($webflowTags));
+        }
 
         $hubspot = \HubSpot\Factory::createWithAccessToken(env('HUBSPOT_API_KEY'));
 
         $lastArticle = '';
-        $cacheName = 'addHubspotPosts28' . md5($lastArticle);
+        $cacheName = 'addHubspotPosts29' . md5($lastArticle);
         if (Cache::get($cacheName)) {
             $results = Cache::get($cacheName);
         } else {
@@ -130,6 +168,10 @@ class APIController extends Controller
 
         $canContinue = false;
         foreach ($results as $key => $value) {
+            if ($key < 10) {
+                $this->msg('Skip: ' . $key . ' - ' . $value['name']);
+                continue;
+            }
 
             $this->msg('Name: ' . $key . ' - ' . $value['name']);
             if ($lastArticle !== '') {
@@ -158,6 +200,7 @@ class APIController extends Controller
             $search = ['blog/', '/', '.'];
             $replace = ['', '', ''];
             $slug = str_replace($search, $replace, $value['slug']);
+
 
             $return = $this->webflowAddCollectionItem(env('WEBFLOW_POSTS_RESOURCE'), [
                 'name' => $value['name'],
